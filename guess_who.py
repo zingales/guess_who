@@ -34,7 +34,8 @@ class Character(object):
         img = Image.open(self.original_image_path)
         new_image = shrink_image(img, GUESS_WHO_SIZE_IN)
         new_image = add_border(new_image, border_color)
-        new_image = add_name(new_image, self.name)
+        new_image = add_text_bottom(new_image, self.name)
+        new_image = add_text_top(new_image, self.universe)
 
 
 
@@ -128,31 +129,55 @@ def add_border(img, border_color):
     return ImageOps.expand(smaller_image,  10, fill = border_color)
 
 
-def add_name(img:Image, name:str):
-    draw = ImageDraw.Draw(img)
-    fontname = "Keyboard.ttf"
-    # font = ImageFont.truetype(<font-file>, <font-size>)
-    x,y = img.size
 
+
+def largest_font_that_fits(width, text, max_size=MAX_FONT_SIZE):
+    fontname = "Keyboard.ttf"
     fontsize=10
+
+    # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype(fontname , fontsize)
-    while font.getlength(name) < 0.9 * img.size[0] and fontsize< MAX_FONT_SIZE:
+    while font.getlength(text) < 0.9 * width:
         # iterate until the text size is just larger than the criteria
         fontsize += 1
         font = ImageFont.truetype(fontname, fontsize)
 
-    # optionally de-increment to be sure it is less than criteria
-    fontsize -= 1
+    # de-increment to be sure it is less than criteria
+    fontsize = min(max_size, fontsize-1)
 
+    return ImageFont.truetype(fontname, fontsize)
+
+
+
+def add_text_top(img:Image, text:str):
+    draw = ImageDraw.Draw(img)
+    
+    x,y = img.size
+
+    font = largest_font_that_fits(x, text, MAX_FONT_SIZE-10)
+
+    _, _, w, h = draw.textbbox(xy= (0, 0), text=text, font=font)
+
+    draw.text(((x-w)/2, 10),text,fill='white', font=font, stroke_width=2, stroke_fill='black')
+    return img
+
+def add_text_bottom(img:Image, name:str):
+    draw = ImageDraw.Draw(img)
+    
+    x,y = img.size
+
+    font = largest_font_that_fits(x, name)
+
+    
     _, _, w, h = draw.textbbox(xy= (0, 0), text=name, font=font)
 
-    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font,
-       stroke_width=2, stroke_fill='black')
+    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font, stroke_width=2, stroke_fill='black')
     return img
 
 
+
 def shrink_image(img:Image, new_size_in:tuple[int, int]):
-    x = int(new_size_in[0]* OUTPUT_DPI)
-    y = int(new_size_in[1]*OUTPUT_DPI)
+    x = int(new_size_in[0] * OUTPUT_DPI)
+    y = int(new_size_in[1] * OUTPUT_DPI)
     return img.resize(size=(x,y))
 
