@@ -13,6 +13,9 @@ OUTPUT_DPI = 150
 A4_SIZE_IN = (8.27, 11.7)
 US_LETTER_IN = (8.5, 11)
 
+MAX_FONT_SIZE = 40
+
+
 
 class Character(object):
     original_image_path:str
@@ -44,54 +47,6 @@ class Character(object):
 
     def __repr__(self) -> str:
         return f"{self.universe}:{self.name}--{self.original_image_path}"
-
-def calculate_new_image_size(original_dpi, original_size_pixels, new_size_in):
-    original_size_in = (original_size_pixels[0]/original_dpi[0], original_size_pixels[1]/original_dpi[1])
-    
-    new_pixels_0 = int((new_size_in[0]/original_size_in[0]) * original_size_pixels[0])
-    new_pixels_1 = int((new_size_in[1]/original_size_in[1]) * original_size_pixels[1])
-
-
-    return (new_pixels_0, new_pixels_1)
-
-
-def add_border(img, border_color):
-    x,y = img.size
-    
-    smaller_image = img.crop(box=(10,10,x-10,y-10))
-    return ImageOps.expand(smaller_image,  10, fill = border_color)
-
-
-MAX_FONT_SIZE = 40
-def add_name(img:Image, name:str):
-    draw = ImageDraw.Draw(img)
-    fontname = "Keyboard.ttf"
-    # font = ImageFont.truetype(<font-file>, <font-size>)
-    x,y = img.size
-
-    fontsize=10
-    font = ImageFont.truetype(fontname , fontsize)
-    while font.getlength(name) < 0.9 * img.size[0] and fontsize< MAX_FONT_SIZE:
-        # iterate until the text size is just larger than the criteria
-        fontsize += 1
-        font = ImageFont.truetype(fontname, fontsize)
-
-    # optionally de-increment to be sure it is less than criteria
-    fontsize -= 1
-
-    _, _, w, h = draw.textbbox(xy= (0, 0), text=name, font=font)
-
-    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font,
-       stroke_width=2, stroke_fill='black')
-    return img
-
-
-def shrink_image(img:Image, new_size_in:tuple[int, int]):
-    x = int(new_size_in[0]* OUTPUT_DPI)
-    y = int(new_size_in[1]*OUTPUT_DPI)
-    return img.resize(size=(x,y))
-
-
 
 class PDFMaker:
 
@@ -156,3 +111,50 @@ class PDFMaker:
                 page_count +=1 
 
         page.save(f"{output_folder}/page_{page_count}.pdf", dpi=(OUTPUT_DPI, OUTPUT_DPI))
+
+
+def calculate_new_image_size(original_dpi, original_size_pixels, new_size_in):
+    original_size_in = (original_size_pixels[0]/original_dpi[0], original_size_pixels[1]/original_dpi[1])
+    
+    new_pixels_0 = int((new_size_in[0]/original_size_in[0]) * original_size_pixels[0])
+    new_pixels_1 = int((new_size_in[1]/original_size_in[1]) * original_size_pixels[1])
+
+
+    return (new_pixels_0, new_pixels_1)
+
+
+def add_border(img, border_color):
+    x,y = img.size
+    
+    smaller_image = img.crop(box=(10,10,x-10,y-10))
+    return ImageOps.expand(smaller_image,  10, fill = border_color)
+
+
+def add_name(img:Image, name:str):
+    draw = ImageDraw.Draw(img)
+    fontname = "Keyboard.ttf"
+    # font = ImageFont.truetype(<font-file>, <font-size>)
+    x,y = img.size
+
+    fontsize=10
+    font = ImageFont.truetype(fontname , fontsize)
+    while font.getlength(name) < 0.9 * img.size[0] and fontsize< MAX_FONT_SIZE:
+        # iterate until the text size is just larger than the criteria
+        fontsize += 1
+        font = ImageFont.truetype(fontname, fontsize)
+
+    # optionally de-increment to be sure it is less than criteria
+    fontsize -= 1
+
+    _, _, w, h = draw.textbbox(xy= (0, 0), text=name, font=font)
+
+    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font,
+       stroke_width=2, stroke_fill='black')
+    return img
+
+
+def shrink_image(img:Image, new_size_in:tuple[int, int]):
+    x = int(new_size_in[0]* OUTPUT_DPI)
+    y = int(new_size_in[1]*OUTPUT_DPI)
+    return img.resize(size=(x,y))
+

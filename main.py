@@ -42,8 +42,6 @@ def main():
     output_folder = "output"
     images, characters = process_images(input_folder, output_folder)
 
-    # images = [Image.open("assets/harry_potter/Ron.png")]
-
     pdf_maker = PDFMaker(US_LETTER_IN[0], US_LETTER_IN[1])
     pdf_maker.save_images(images, "output")
 
