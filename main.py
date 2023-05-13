@@ -5,12 +5,10 @@ import json
 add_slash = os.path.join
 
 
-def main():
-    input_folder = "assets"
-    output_folder = "output"
-
+def process_images(input_folder, output_folder):
     all_characters = dict()
-    # for folder in folders 
+
+    all_images = list()
     for afolder in os.listdir(input_folder):
         if afolder.startswith("."):
             continue
@@ -31,11 +29,23 @@ def main():
             print("working on ", input_path)
             character = Character(image_path=input_path, universe=universe, name=name)
             output_path = add_slash(ouput_universe_folder, os.path.splitext(afile)[0]+".png")
-            character.create_output_image(output_path, border_color=border_color)
+            new_image = character.create_output_image(output_path, border_color=border_color)
+            all_images.append(new_image)
             characters.append(character)
         all_characters[universe] = characters
+
+    return all_images, all_characters
             
 
+def main():
+    input_folder = "assets"
+    output_folder = "output"
+    images, characters = process_images(input_folder, output_folder)
+
+    # images = [Image.open("assets/harry_potter/Ron.png")]
+
+    pdf_maker = PDFMaker(US_LETTER_IN[0], US_LETTER_IN[1])
+    pdf_maker.save_images(images, "output")
 
 if __name__ == "__main__":
     main()

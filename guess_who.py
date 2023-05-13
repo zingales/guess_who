@@ -8,22 +8,23 @@ CM_TO_IN = 0.3937008
 GUESS_WHO_SIZE_CM = (2.9, 3.4)
 GUESS_WHO_SIZE_IN = (GUESS_WHO_SIZE_CM[0]* CM_TO_IN, GUESS_WHO_SIZE_CM[1] * CM_TO_IN)
 
-A4_SIZE_IN = (8.27, 11.7)
-
 OUTPUT_DPI = 150
+
+A4_SIZE_IN = (8.27, 11.7)
+US_LETTER_IN = (8.5, 11)
 
 
 class Character(object):
     original_image_path:str
     name:str
     universe:str
-    sized_image_path:str
+    output_image_path:str
 
     def __init__(self, image_path, name, universe):
         self.original_image_path = image_path
         self.name = name
         self.universe = universe
-        self.sized_image_path = ""
+        self.output_image_path = ""
 
 
     def create_output_image(self, output_path, border_color):
@@ -37,7 +38,7 @@ class Character(object):
 
 
         new_image.save(output_path, dpi=(OUTPUT_DPI,OUTPUT_DPI))
-        self.sized_image_path = output_path
+        self.output_image_path = output_path
         return new_image
         
 
@@ -92,13 +93,13 @@ def shrink_image(img:Image, new_size_in:tuple[int, int]):
 
 
 
-class PageImage:
+class PDFMaker:
 
     dots_per_in = 150
 
-    def __init__(self) -> None:
-        self.width = self.A4_width 
-        self.height = self.A4_height 
+    def __init__(self, width, height) -> None:
+        self.width = width 
+        self.height = height 
         self.width_margin = 1 
         self.height_margin = 1
         
@@ -110,36 +111,48 @@ class PageImage:
 
     def tile_coordinates_per_page(self, tile_width, tile_height):
         width_range = self.max_width - self.min_width
-        width_count = width_range / float(tile_width)
-        width_surplus = self.width_range - (width_count * tile_width)
+        width_count = int(width_range // tile_width)
+        width_surplus = width_range - (width_count * tile_width)
         width_padding = width_surplus / width_count
 
         height_range = self.max_height - self.min_height
-        height_count = height_range / float(tile_height)
-        height_surplus = self.height_range - (height_count * tile_height)
+        height_count = int(height_range // tile_height)
+        height_surplus = height_range - (height_count * tile_height)
         height_padding = height_surplus / height_count
 
         coordinates = list()
-        for w in range(self.min_width, self.max_width, tile_width + width_padding):
-            for h in range(self.min_height, self.max_height, height_padding):
-                coordinates.append( tuple(int(w * self.dots_per_in),int(h * self.dots_per_in)))
+        new_box_width = tile_width + width_padding
+        new_box_height = tile_height + height_padding
+
+
+        for h in range(height_count):
+            for w in range(width_count):
+                height_pixels = int ((self.min_height + (h * new_box_height)) * self.dots_per_in)
+                width_pixels = int( (self.min_width+ (w * new_box_width)) * self.dots_per_in )
+                coordinates.append((width_pixels, height_pixels))
+                w+= new_box_width
+        
 
         return coordinates
     
-    def save_images(self, images):
+    def save_images(self, images, output_folder):
         
-        coordinates = self.tile_coordinates_per_page(GUESS_WHO_SIZE_CM[0]*CM_TO_IN, GUESS_WHO_SIZE_CM[1]*CM_TO_IN)
+        coordinates = self.tile_coordinates_per_page(GUESS_WHO_SIZE_IN[0], GUESS_WHO_SIZE_IN[1])
 
 
         page_count = 0
-        page = Image.new('RGB', (self.width * self.dots_per_in, self.height * self.dots_per_in), 'white')
+        width_pixel = self.width * self.dots_per_in
+        height_pixel = self.height * self.dots_per_in
+        page = Image.new('RGB', (int(width_pixel), int(height_pixel)), 'white')
         for i in range(len(images)):
             cord_index = i%len(coordinates)
             cord = coordinates[cord_index]
-            page.paste(Image.open(images[i]), box = cord)
+            page.paste(images[i], box = cord)
             if cord_index == len(coordinates)-1:
-                page.save('page{}.pdf'.format(page_count))
-                page = Image.new('RGB', (self.width * self.dots_per_in, self.height * self.dots_per_in), 'white')
+                page.save(f"{output_folder}/page_{page_count}.pdf", dpi=(OUTPUT_DPI, OUTPUT_DPI))
+                w = int(self.width * self.dots_per_in)
+                h = int(self.height * self.dots_per_in)
+                page = Image.new('RGB', (w,h), 'white')
                 page_count +=1 
 
-        page.save('page{}.pdf'.format(page_count))
+        page.save(f"{output_folder}/page_{page_count}.pdf", dpi=(OUTPUT_DPI, OUTPUT_DPI))
