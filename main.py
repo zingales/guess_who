@@ -1,6 +1,7 @@
-from guess_who import *
 import json
+import os
 
+from guess_who import *
 
 add_slash = os.path.join
 
