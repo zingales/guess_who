@@ -29,10 +29,9 @@ class Character(object):
 
 
     def create_output_image(self, output_path, border_color):
-
-        # open imge
+        # open image
         img = Image.open(self.original_image_path)
-        new_image = shrink_image(img, GUESS_WHO_SIZE_IN)
+        new_image = shrink_image(img, GUESS_WHO_SIZE_IN, border_color)
         new_image = add_border(new_image, border_color)
         new_image = add_text_bottom(new_image, self.name)
         # new_image = add_text_top(new_image, self.universe)
@@ -176,7 +175,7 @@ def add_text_bottom(img:Image, name:str):
 
 
 
-def shrink_image(img:Image, new_size_in:tuple[int, int]):
+def shrink_image(img:Image, new_size_in:tuple[int, int], fill:str):
     desired_x = int(new_size_in[0] * OUTPUT_DPI)
     desired_y = int(new_size_in[1] * OUTPUT_DPI)
 
@@ -204,7 +203,7 @@ def shrink_image(img:Image, new_size_in:tuple[int, int]):
     if fill_required:
         x_border = int((desired_x-x)/2)
         y_border = int((desired_y-y)/2)
-        new_image = ImageOps.expand(new_image, border=(x_border,y_border), fill='black')
+        new_image = ImageOps.expand(new_image, border=(x_border,y_border), fill=fill)
     
     return new_image
 
