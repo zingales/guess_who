@@ -35,7 +35,7 @@ class Character(object):
         new_image = shrink_image(img, GUESS_WHO_SIZE_IN)
         new_image = add_border(new_image, border_color)
         new_image = add_text_bottom(new_image, self.name)
-        new_image = add_text_top(new_image, self.universe)
+        # new_image = add_text_top(new_image, self.universe)
 
 
 
@@ -177,7 +177,34 @@ def add_text_bottom(img:Image, name:str):
 
 
 def shrink_image(img:Image, new_size_in:tuple[int, int]):
-    x = int(new_size_in[0] * OUTPUT_DPI)
-    y = int(new_size_in[1] * OUTPUT_DPI)
-    return img.resize(size=(x,y))
+    desired_x = int(new_size_in[0] * OUTPUT_DPI)
+    desired_y = int(new_size_in[1] * OUTPUT_DPI)
+
+    img_size_y, img_size_x = img.size
+    
+    ratioed_x = (img_size_y/img_size_x) * desired_y
+    ratioed_y = (img_size_x/img_size_y) * desired_x
+
+    x = desired_x
+    y = desired_y
+
+    fill_required = False
+    if ratioed_x > desired_x:
+        y = ratioed_y
+        fill_required = True
+
+    if ratioed_y > desired_y:
+        x = ratioed_x
+
+        fill_required = True
+
+    
+    new_image = img.resize(size=(int(x),int(y)))
+
+    if fill_required:
+        x_border = int((desired_x-x)/2)
+        y_border = int((desired_y-y)/2)
+        new_image = ImageOps.expand(new_image, border=(x_border,y_border), fill='black')
+    
+    return new_image
 
