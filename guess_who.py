@@ -11,7 +11,9 @@ OUTPUT_DPI = 150
 A4_SIZE_IN = (8.27, 11.7)
 US_LETTER_IN = (8.5, 11)
 
-MAX_FONT_SIZE = 40
+MAX_FONT_SIZE = 60
+
+CARD_SIZE_IN=(2.5, 3.7)
 
 
 
@@ -28,10 +30,10 @@ class Character(object):
         self.output_image_path = ""
 
 
-    def create_output_image(self, output_path, border_color):
+    def create_output_image(self, output_path, border_color, new_size=GUESS_WHO_SIZE_IN):
         # open image
         img = Image.open(self.original_image_path)
-        new_image = shrink_image(img, GUESS_WHO_SIZE_IN, border_color)
+        new_image = shrink_image(img, new_size, border_color)
         new_image = add_border(new_image, border_color)
         new_image = add_text_bottom(new_image, self.name)
         # new_image = add_text_top(new_image, self.universe)
@@ -53,8 +55,8 @@ class PDFMaker:
     def __init__(self, width, height) -> None:
         self.width = width 
         self.height = height 
-        self.width_margin = 1 
-        self.height_margin = 1
+        self.width_margin = .75 
+        self.height_margin = .25
         
         self.min_width = self.width_margin
         self.max_width = self.width - self.width_margin
@@ -80,17 +82,16 @@ class PDFMaker:
 
         for h in range(height_count):
             for w in range(width_count):
-                height_pixels = int ((self.min_height + (h * new_box_height)) * self.dots_per_in)
-                width_pixels = int( (self.min_width+ (w * new_box_width)) * self.dots_per_in )
+                height_pixels = int ((self.min_height + (height_padding/2) + (h * new_box_height)) * self.dots_per_in)
+                width_pixels = int( (self.min_width + (width_padding/2) + (w * new_box_width)) * self.dots_per_in )
                 coordinates.append((width_pixels, height_pixels))
-                w+= new_box_width
         
 
         return coordinates
     
-    def save_images(self, images, output_folder):
+    def save_images(self, images, output_folder, new_size):
         
-        coordinates = self.tile_coordinates_per_page(GUESS_WHO_SIZE_IN[0], GUESS_WHO_SIZE_IN[1])
+        coordinates = self.tile_coordinates_per_page(new_size[0], new_size[1])
 
 
         page_count = 0
@@ -163,7 +164,7 @@ def add_text_bottom(img:Image, name:str):
     
     _, _, w, h = draw.textbbox(xy= (0, 0), text=name, font=font)
 
-    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font, stroke_width=2, stroke_fill='black')
+    draw.text(((x-w)/2, y-h-10),name,fill='white', font=font, stroke_width=5, stroke_fill='black')
     return img
 
 def shrink_image(img:Image, new_size_in:tuple[int, int], fill:str):
