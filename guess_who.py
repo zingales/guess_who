@@ -110,7 +110,6 @@ class PDFMaker:
 
         page.save(f"{output_folder}/page_{page_count}.pdf", dpi=(OUTPUT_DPI, OUTPUT_DPI))
 
-
 def calculate_new_image_size(original_dpi, original_size_pixels, new_size_in):
     original_size_in = (original_size_pixels[0]/original_dpi[0], original_size_pixels[1]/original_dpi[1])
     
@@ -120,15 +119,11 @@ def calculate_new_image_size(original_dpi, original_size_pixels, new_size_in):
 
     return (new_pixels_0, new_pixels_1)
 
-
 def add_border(img, border_color):
     x,y = img.size
     
     smaller_image = img.crop(box=(10,10,x-10,y-10))
     return ImageOps.expand(smaller_image,  10, fill = border_color)
-
-
-
 
 def largest_font_that_fits(width, text, max_size=MAX_FONT_SIZE):
     fontname = "Keyboard.ttf"
@@ -145,8 +140,6 @@ def largest_font_that_fits(width, text, max_size=MAX_FONT_SIZE):
     fontsize = min(max_size, fontsize-1)
 
     return ImageFont.truetype(fontname, fontsize)
-
-
 
 def add_text_top(img:Image, text:str):
     draw = ImageDraw.Draw(img)
@@ -172,8 +165,6 @@ def add_text_bottom(img:Image, name:str):
 
     draw.text(((x-w)/2, y-h-10),name,fill='white', font=font, stroke_width=2, stroke_fill='black')
     return img
-
-
 
 def shrink_image(img:Image, new_size_in:tuple[int, int], fill:str):
     desired_x = int(new_size_in[0] * OUTPUT_DPI)
