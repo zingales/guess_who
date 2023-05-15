@@ -5,25 +5,24 @@ from guess_who import *
 
 add_slash = os.path.join
 
+def load_universes(input_folder):
 
-def process_images(input_folder, output_folder, new_size):
-    all_characters = dict()
-
-    all_images = list()
+    universes = list()
     for afolder in os.listdir(input_folder):
         if afolder.startswith("."):
             continue
 
         universe_folder = add_slash(input_folder, afolder)
-        ouput_universe_folder = add_slash(output_folder, afolder)
-        os.makedirs(ouput_universe_folder, exist_ok=True)
         options_path = add_slash(universe_folder, "options.json")
         options = json.load(open(options_path, 'r'))
 
-        characters = list()
-        universe = options["universe"]
+
+        universe_name = options["universe"]
         border_color = options["border_color"]
-        print(f'Entering Universe "{ universe }"')
+        uni = Universe(universe_name, border_color)
+        universes.append(uni)
+
+        print(f'Entering Universe "{ universe_name }"')
 
         for afile in os.listdir(universe_folder):
             if afile == "options.json" or afile.startswith("."):
@@ -32,25 +31,26 @@ def process_images(input_folder, output_folder, new_size):
             name = os.path.splitext(afile)[0]
             input_path = add_slash(universe_folder, afile)
 
-            print("working on ", input_path)
-            character = Character(image_path=input_path, universe=universe, name=name)
-            output_path = add_slash(ouput_universe_folder, os.path.splitext(afile)[0]+".png")
-            new_image = character.create_output_image(output_path, border_color=border_color, new_size=new_size)
-            all_images.append(new_image)
-            characters.append(character)
-        all_characters[universe] = characters
-
-    return all_images, all_characters
+            print("loading ", input_path)
+            character = Character(image_path=input_path, universe=uni, name=name)
+            uni.add(character)
             
+    return universes  
+  
 
 def main():
-    new_size = CARD_SIZE_IN
+    # new_size = CARD_SIZE_IN
+    new_size = GUESS_WHO_SIZE_IN
     input_folder = "assets"
-    output_folder = "output"
-    images, characters = process_images(input_folder, output_folder, new_size)
+    output_folder = "output/images"
+    
+    universes = load_universes(input_folder)
+    all_images = list()
+    for universe in universes:
+        all_images.extend(universe.generate_images(add_slash(output_folder, universe.name), new_size))
 
     pdf_maker = PDFMaker(US_LETTER_IN[0], US_LETTER_IN[1])
-    pdf_maker.save_images(images, "output", new_size)
+    pdf_maker.save_images(all_images, "output", new_size)
 
 if __name__ == "__main__":
     main()

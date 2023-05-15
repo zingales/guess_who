@@ -1,3 +1,4 @@
+import os
 from PIL import Image, ImageOps, ImageFont,  ImageDraw 
 
 
@@ -14,7 +15,6 @@ US_LETTER_IN = (8.5, 11)
 MAX_FONT_SIZE = 60
 
 CARD_SIZE_IN=(2.5, 3.7)
-
 
 
 class Character(object):
@@ -47,6 +47,40 @@ class Character(object):
 
     def __repr__(self) -> str:
         return f"{self.universe}:{self.name}--{self.original_image_path}"
+
+class Universe(object):
+    characters:list[Character]
+    name:str
+    border_color:str
+
+    def __init__(self, name, border_color) -> None:
+        self.characters = list()
+        self.name = name
+        self.border_color = border_color
+
+
+    def add(self, character:Character):
+        self.characters.append(character)
+
+
+    def generate_images(self, output_folder, new_size):
+        os.makedirs(output_folder, exist_ok=True)
+
+        all_images = list()
+        for character in self.characters:
+            file_name = os.path.splitext(os.path.basename(character.original_image_path))[0]
+            output_path = os.path.join(output_folder, file_name+".png")
+            new_image = character.create_output_image(output_path, border_color=self.border_color, new_size=new_size)
+            all_images.append(new_image)
+    
+        return all_images
+            
+
+    
+
+
+
+
 
 class PDFMaker:
 
